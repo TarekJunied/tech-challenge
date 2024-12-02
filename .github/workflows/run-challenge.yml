@@ -1,0 +1,47 @@
+name: Check Dockerfile and Run Container
+
+on:
+  push:
+    branches-ignore:
+      - main
+
+jobs:
+  check-dockerfile:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Check for Dockerfile
+      id: check_dockerfile
+      run: |
+        if [ ! -f ./Dockerfile ]; then
+          echo "Error: Dockerfile not found at the root of the repository."
+          echo "::error::No Dockerfile found at the root. Please include a Dockerfile in your repository's root directory."
+          exit 1
+        fi
+        echo "Dockerfile found."
+
+    - name: Build Docker container
+      id: build_container
+      run: |
+        docker build -t pr-container-test .
+      timeout-minutes: 3
+      continue-on-error: false
+
+    - name: Run Docker container
+      id: run_container
+      run: |
+        docker run --rm pr-container-test
+      timeout-minutes: 3
+      continue-on-error: false
+
+    - name: Post-success message
+      if: success()
+      run: |
+        echo "Thank you! Seems like your container ran without errors. The alpamayo team is going to contact you."
+
+    - name: Post-failure message
+      if: failure()
+      run: |
+        echo "::error::The container failed to build or run within the allowed time. Please check your Dockerfile and container runtime."
