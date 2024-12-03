@@ -2,6 +2,7 @@ name: Check Dockerfile and Run Container
 
 on:
   push:
+    # you might want to delete the following two lines if you want to use the main branch
     branches-ignore:
       - main
 
